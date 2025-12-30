@@ -1,0 +1,28 @@
+from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.testing.schema import mapped_column
+from database import Base
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey,Text
+from datetime import datetime
+
+'''
+in my opinion the message should include 
+    id ,
+    sender id ,
+    receiver id ,
+    room_it_belongs,
+    mesage ,
+    created_at ,
+    updated_at ,
+'''
+class Message(Base):
+    __tablename__ = "messages"
+    id :Mapped[int]= mapped_column(Integer, primary_key=True)
+    sender_id :Mapped[int]= mapped_column(ForeignKey("users.id"))
+    receiver_id:Mapped[int]= mapped_column(ForeignKey("users.id"),nullable=True)
+    room_id:Mapped[int]= mapped_column(ForeignKey("rooms.id"),nullable=True)
+    message:Mapped[datetime]= mapped_column(Text,nullable=True)
+    created_at:Mapped[datetime]= mapped_column(DateTime,default=datetime.utcnow)
+    updated_at:Mapped[datetime]= mapped_column(DateTime,default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    #Relationships
+    room:Mapped[int]= relationship("Room", back_populates="messages")
