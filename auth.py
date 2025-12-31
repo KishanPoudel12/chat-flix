@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from fastapi import HTTPException, APIRouter, status
+from fastapi import HTTPException, APIRouter, status, Response
 from sqlalchemy.orm import Session
 from crud.user import get_user_by_id, get_user_by_username
 from database import get_db
@@ -13,7 +13,6 @@ from datetime import datetime
 from typing import Annotated
 from models import User
 from schemas.token import Token
-
 auth_router= APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -27,7 +26,6 @@ def get_user(db:Session, user_id:int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User Not Found")
     return user
 
-
 def authenticate_user(db:Session, username:str, password:str):
     users= get_user_by_username(db, username)
     if not users:
@@ -36,7 +34,6 @@ def authenticate_user(db:Session, username:str, password:str):
         if  verify_password(password, user.hashed_password):
             return user
     raise  HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Password")
-
 
 
 def create_access_token(data:dict , expire_delta:timedelta | None =None ):
@@ -67,7 +64,6 @@ async def get_current_user(token:Annotated[str,Depends(oauth2_scheme)],db:Sessio
         raise credentials_exception
     return user
 
-
 def get_current_active_user(current_user:Annotated[User, Depends(get_current_user)]):
     if not getattr(current_user,"is_active", False):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User Not Found")
@@ -77,7 +73,8 @@ def get_current_active_user(current_user:Annotated[User, Depends(get_current_use
 @auth_router.post("/login")
 async def login_for_access_token(
   form_data:Annotated[OAuth2PasswordRequestForm,Depends()],
-  db:Session=Depends(get_db)
+  response:Response,
+  db:Session=Depends(get_db),
 ):
   user= authenticate_user(db,form_data.username, form_data.password)
   if not user:
@@ -90,10 +87,16 @@ async def login_for_access_token(
   access_token= create_access_token(
         data={"user_id":user.id},
         expire_delta=access_token_expires)
+
+  response.set_cookie(
+      key="access_token",  # cookie name
+      value=f"Bearer {access_token}",  # value with Bearer prefix
+      httponly=True,  # prevent JS access for security
+      max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) * 60,
+      secure=False,  # set True in production with HTTPS
+      samesite="lax"
+  )
   return Token(access_token=access_token, token_type="bearer")
-
-
-
 @auth_router.get("/me",response_model=UserResponse)
 async def get_me(current_user:Annotated[User,Depends(get_current_active_user)]):
   return current_user
@@ -101,11 +104,4 @@ async def get_me(current_user:Annotated[User,Depends(get_current_active_user)]):
 @auth_router.get("/debug-token")
 async def get_token(token:Annotated[str | None ,Depends(oauth2_scheme)]):
   return {"token":token}
-
-
-
-
-
-
-
 

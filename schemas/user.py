@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from typing import Optional
+from schemas.message import MessageResponse
 
 class UserBase(BaseModel):
     username: str
@@ -22,6 +23,7 @@ class UserResponse(UserBase):
     user_profile:Optional[str]=None
     created_at: datetime
     updated_at: datetime
+    messages:list[MessageResponse]
     model_config = {
         "from_attributes": True
     }

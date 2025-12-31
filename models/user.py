@@ -74,10 +74,10 @@ class User(Base):
         back_populates="host"
     )
 
-
     joined_rooms: Mapped[list["RoomMember"]] = relationship("RoomMember", back_populates="user")
 
 
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="sender")
 
 
 

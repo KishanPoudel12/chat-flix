@@ -43,7 +43,7 @@ html="""
 
     function connect() {
         const roomId = Number(document.getElementById("roomId").value);
-        socket = new WebSocket(`ws://localhost:8000/ws/rooms/${roomId}`);
+        socket = new WebSocket(`ws://127.0.0.1:8000/ws/rooms/${roomId}`);
 
         socket.onopen = () => {
             document.getElementById("status").innerText = "✅ Connected";
