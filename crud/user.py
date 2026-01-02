@@ -1,5 +1,6 @@
 from fastapi import status,HTTPException
 from sqlalchemy.orm import Session
+
 from models import User
 from schemas.user import UserCreate, UserUpdate
 from utils import  pagination , password_hash, verify_password
@@ -67,4 +68,7 @@ def delete_user(db:Session , user_id:int ):
     db.delete(user_to_delete)
     db.commit()
     return user_to_delete
+
+
+
 

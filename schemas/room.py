@@ -10,9 +10,9 @@ class RoomMemberResponse(BaseModel):
     user_id: int
     joined_at: datetime
 
-    class Config:
-        orm_mode = True
-
+    model_config = {
+        "from_attributes": True
+    }
 class RoomBase(BaseModel):
     room_name:str
     host_id:int
@@ -42,6 +42,8 @@ class RoomResponse(RoomBase):
     id:int
     members:list[RoomMemberResponse]
     pass
+
+
 
 
 

@@ -62,11 +62,23 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
                     current_time=data["time"],
                     action_str=data["action"]
                 )
+            elif data.get("type") == "leave":
+                manager.disconnect(room_id, current_user.id, db)
+                await manager.broadcast(
+                    room_id,
+                    {
+                        "type": "system",
+                        "message": f"User {current_user.username} left the room"
+                    }
+                )
+                await websocket.close(code=1000)
+                break
+
             elif data.get("type")=="chat" :
                 await manager.broadcast(room_id=room_id, message={"type":"chat", "message":f"{current_user.username}:{data["message"]}"})
     except WebSocketDisconnect:
         manager.disconnect(room_id, user_id=current_user.id,db=db)
-        await manager.broadcast(room_id,message={"type":"chat", "message":f"User {current_user.id} left the Room"} )
+        await manager.broadcast(room_id,message={"type":"system", "message":f"User {current_user.id} Disconnected"} )
 
 
 

@@ -10,6 +10,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    is_guest:bool
     password: str
 
 class UserUpdate(UserBase):

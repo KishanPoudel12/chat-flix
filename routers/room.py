@@ -9,6 +9,7 @@ from models import  User
 from datetime import datetime
 from jose import jwt,JWTError
 import os
+from auth   import  require_non_guest_user
 room_router = APIRouter(
     prefix="/rooms",
     tags=["Rooms"]
@@ -66,7 +67,7 @@ def create_new_room(
     max_members: int = Form(...),
     # scheduled_start: Optional[datetime] = Form(None),
     db: Session = Depends(get_db),
-    current_user:User=Depends(get_current_active_user)
+    current_user:User=Depends(require_non_guest_user)
 ):
     room_data = RoomCreate(
         room_name=room_name,

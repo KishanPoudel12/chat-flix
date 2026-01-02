@@ -24,7 +24,6 @@ def add_user_to_room(db:Session, room_id:int , user_id:int ):
     else:
         role="admin"
 
-
     user_to_add= RoomMember(
         room_id=room_id,
         user_id=user_id,
@@ -56,7 +55,6 @@ def remove_user_from_room(db:Session, room_id:int , target_user:int , host_id:in
     db.commit()
     db.refresh(member)
     return member
-
 
 
 def leave_room(db:Session , room_id:int , user_id:int):

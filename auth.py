@@ -20,8 +20,6 @@ auth_router= APIRouter(
 
 oauth2_scheme= OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-
-
 def get_user(db:Session, user_id:int):
     user= get_user_by_id(db,user_id)
     if not user:
@@ -89,7 +87,6 @@ async def login_for_access_token(
   access_token= create_access_token(
         data={"user_id":user.id},
         expire_delta=access_token_expires)
-
   response.set_cookie(
       key="access_token",  # cookie name
       value=f"Bearer {access_token}",  # value with Bearer prefix
@@ -107,3 +104,21 @@ async def get_me(current_user:Annotated[User,Depends(get_current_active_user)]):
 async def get_token(token:Annotated[str | None ,Depends(oauth2_scheme)]):
   return {"token":token}
 
+
+
+#guest user ko lagi auth
+def guest_access_token(data:dict):
+        to_encode= data.copy()
+        expire= datetime.utcnow()+ timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES",30)))
+        to_encode.update({"exp":expire})
+        encoded_jwt= jwt.encode(to_encode,os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM"))
+
+        return encoded_jwt
+
+
+
+#for Nonguest user only
+def require_non_guest_user(current_user: User = Depends(get_current_active_user)):
+    if current_user.is_guest:
+        raise HTTPException(status_code=403, detail="Guest users cannot do this")
+    return current_user

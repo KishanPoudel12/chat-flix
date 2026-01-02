@@ -57,6 +57,8 @@ class User(Base):
         Boolean,
         default=True
     )
+    is_guest: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow
