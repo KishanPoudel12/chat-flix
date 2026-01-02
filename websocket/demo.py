@@ -120,7 +120,7 @@ async function loadRoom() {
     if (!res.ok) throw "Room not found";
     const room = await res.json();
     document.getElementById("room-title").innerText = room.room_name;
-    videoId = extractYouTubeId(room.video_url) || "KEvXoPFi28k";
+    videoId = extractYouTubeId(room.video_url) ;
     await checkRole(roomId);
     createPlayer();
 }
@@ -131,11 +131,11 @@ async function connect() {
     const roomId = Number(document.getElementById("roomId").value);
     const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
     
-    const ws = new WebSocket(
+     socket = new WebSocket(
      `${wsProtocol}://${location.host}/ws/rooms/${roomId}`
     );
-    
-    //socket = new WebSocket(`ws://127.0.0.1:8000/ws/rooms/${roomId}`);
+    console.log(socket)
+    console.log(location.host+`/ws/rooms/${roomId}`)
 
     socket.onopen = () => {
         document.getElementById("status").innerText = "✅ Connected";
