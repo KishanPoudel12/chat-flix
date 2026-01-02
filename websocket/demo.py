@@ -42,16 +42,16 @@ button { margin-top: 5px; }
 <button id="send-btn">Send</button>
 
 <script>
-
 const API_BASE =
   window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://127.0.0.1:8000"
     : "https://chat-flix-kishan.onrender.com";
-    
+
 let socket = null;
 let isAdmin = false;
 let player = null;
 let videoId = null;
+let roomId = null;
 
 // ---------------- Helpers ----------------
 function logState(event, data={}) {
@@ -70,39 +70,41 @@ function extractYouTubeId(url) {
 }
 
 // ---------------- YouTube ----------------
-function onYouTubeIframeAPIReady() { logState("YouTube API Ready"); }
+function onYouTubeIframeAPIReady() {
+    logState("YouTube API Ready");
+}
 
 function createPlayer() {
     if (!videoId) videoId = "KEvXoPFi28k"; // fallback
     player = new YT.Player("player", {
         videoId: videoId,
         playerVars: { controls: 1, autoplay: 0, origin: window.location.origin },
-        events: { onReady: () => logState("Player Ready"), onStateChange: onPlayerStateChange }
+        events: {
+            onReady: () => logState("Player Ready"),
+            onStateChange: onPlayerStateChange
+        }
     });
 }
 
 function onPlayerStateChange(event) {
-    const map = {[-1]:"UNSTARTED",0:"ENDED",1:"PLAYING",2:"PAUSED",3:"BUFFERING",5:"CUED"};
+    if (!isAdmin || !socket) return;
     const currentTime = player.getCurrentTime();
-    logState("Player State Change", { state: map[event.data], time: currentTime });
+    const action = event.data === YT.PlayerState.PLAYING ? "play" :
+                   event.data === YT.PlayerState.PAUSED ? "pause" : "seek";
 
-    if (isAdmin && socket) {
-        socket.send(JSON.stringify({
-            type: "video_action",
-            action: event.data === YT.PlayerState.PLAYING ? "play" :
-                    event.data === YT.PlayerState.PAUSED ? "pause" : "seek",
-            time: currentTime
-        }));
-    }
+    socket.send(JSON.stringify({
+        type: "video_action",
+        video_id: videoId,
+        action: action,
+        time: currentTime
+    }));
+
+    logState("Player State Change Sent", { action, time: currentTime });
 }
 
 // ---------------- Room & Role ----------------
 async function checkRole(roomId) {
-    const res = await fetch(`${API_BASE}/rooms/${roomId}/role`, {
-        credentials: "include"
-    });    
-    console.log(API_BASE)
-
+    const res = await fetch(`${API_BASE}/rooms/${roomId}/role`, { credentials: "include" });
     if (!res.ok) throw "Failed to get role";
     const data = await res.json();
     isAdmin = data.is_admin;
@@ -111,31 +113,22 @@ async function checkRole(roomId) {
 }
 
 async function loadRoom() {
-    const roomId = Number(document.getElementById("roomId").value);
-    const res = await fetch(`${API_BASE}/rooms/${roomId}`, {
-        credentials: "include"
-    });
-    console.log(API_BASE)
-
+    roomId = Number(document.getElementById("roomId").value);
+    const res = await fetch(`${API_BASE}/rooms/${roomId}`, { credentials: "include" });
     if (!res.ok) throw "Room not found";
     const room = await res.json();
     document.getElementById("room-title").innerText = room.room_name;
-    videoId = extractYouTubeId(room.video_url) ;
+    videoId = extractYouTubeId(room.video_url);
     await checkRole(roomId);
     createPlayer();
 }
 
-// ---------------- WebSocket ----------------
 async function connect() {
     await loadRoom();
     const roomId = Number(document.getElementById("roomId").value);
     const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
-    
-     socket = new WebSocket(
-     `${wsProtocol}://${location.host}/ws/rooms/${roomId}`
-    );
-    console.log(socket)
-    console.log(location.host+`/ws/rooms/${roomId}`)
+
+    socket = new WebSocket(`${wsProtocol}://${location.host}/ws/rooms/${roomId}`);
 
     socket.onopen = () => {
         document.getElementById("status").innerText = "✅ Connected";
@@ -147,8 +140,28 @@ async function connect() {
         const data = JSON.parse(e.data);
         logState("WS Message", data);
 
-        if (data.type === "chat") appendMessage(data.message);
-        if (data.type === "video_action") applyVideoAction(data);
+        if (data.type === "chat") {
+            appendMessage(data.message);
+        }
+
+        if (data.type === "video_action") {
+            // Apply host's action for new users or updates
+            if (!isAdmin) {
+                applyVideoAction(data);
+
+                // ---------- CONSOLE LOG LIVE ADMIN STATE ----------
+                console.log('--------------------ADMIN LIVE STATE--------------------');
+                console.log('Video ID:', data.video_id);
+                console.log('Action:', data.action);
+                console.log('Time:', data.time);
+                console.log('-------------------------------------------------------');
+            }
+        }
+
+        if (data.type === "kicked") {
+            alert("You were kicked from the room!");
+            location.reload();
+        }
     };
 
     socket.onclose = () => {
@@ -160,24 +173,34 @@ async function connect() {
 // ---------------- Video Sync ----------------
 function applyVideoAction(data) {
     if (!player) return;
-    logState("Apply Video Action", data);
-    const currentTime = data.time ?? 0;
+    if (data.video_id) videoId = data.video_id;
+    const time = data.time ?? 0;
 
-    if (data.action === "play") player.playVideo();
-    if (data.action === "pause") player.pauseVideo();
-    if (data.action === "seek") player.seekTo(currentTime, true);
+    switch (data.action) {
+        case "play": player.seekTo(time, true); player.playVideo(); break;
+        case "pause": player.seekTo(time, true); player.pauseVideo(); break;
+        case "seek": player.seekTo(time, true); break;
+    }
+    logState("Apply Video Action", data);
+
+    // ---------- OPTIONAL: LOG AGAIN IF YOU WANT FRONTEND STATE ----------
+    console.log('--------------------ADMIN LIVE STATE AFTER SYNC--------------------');
+    console.log('Video ID:', videoId);
+    console.log('Current Player Time:', player.getCurrentTime());
+    console.log('-------------------------------------------------------');
 }
 
+
 // ---------------- Controls ----------------
-function sendVideoAction(action, time=null) {
-    if (!isAdmin || !socket) return;
-    if (time === null && player) time = player.getCurrentTime();
-    socket.send(JSON.stringify({ type: "video_action", action, time }));
+function sendVideoAction(action) {
+    if (!isAdmin || !socket || !player) return;
+    const currentTime = player.getCurrentTime();
+    socket.send(JSON.stringify({ type: "video_action", video_id: videoId, action, time: currentTime }));
 }
 
 document.getElementById("play-btn").onclick = () => sendVideoAction("play");
 document.getElementById("pause-btn").onclick = () => sendVideoAction("pause");
-document.getElementById("restart-btn").onclick = () => sendVideoAction("seek", 0);
+document.getElementById("restart-btn").onclick = () => sendVideoAction("seek");
 
 // ---------------- Chat ----------------
 document.getElementById("send-btn").onclick = () => {
@@ -193,6 +216,7 @@ document.getElementById("connect-btn").onclick = connect;
 </script>
 </body>
 </html>
+
 
 
 """
