@@ -24,6 +24,7 @@ async def read_message_by_id( message_id:int ,db:Session=Depends(get_db),skip:in
 async def read_messages_room_id(room_id:int,db:Session=Depends(get_db)):
     return get_message_by_room(db,room_id)
 
+
 @message_router.post("/")
 async def create_new_message( data:MessageCreate, db:Session=Depends(get_db),current_user:User=Depends(get_current_active_user)):
     message= create_message(db, data, current_user)
