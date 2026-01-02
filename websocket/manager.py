@@ -6,10 +6,25 @@ from sqlalchemy.orm import Session
 from crud.room import get_room_by_id
 from crud.room_member import add_user_to_room, leave_room
 import redis
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
+# Read Redis config
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT"))
+REDIS_USERNAME = os.getenv("REDIS_USERNAME")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
+# Connect to Redis
+redis_client = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    username=REDIS_USERNAME,
+    password=REDIS_PASSWORD,
+    decode_responses=True
+)
 
-redis_client= redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 try:
     pong = redis_client.ping()
