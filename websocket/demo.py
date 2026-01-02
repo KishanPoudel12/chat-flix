@@ -42,6 +42,12 @@ button { margin-top: 5px; }
 <button id="send-btn">Send</button>
 
 <script>
+
+const API_BASE =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://chat-flix-kishan.onrender.com";
+    
 let socket = null;
 let isAdmin = false;
 let player = null;
@@ -92,7 +98,11 @@ function onPlayerStateChange(event) {
 
 // ---------------- Room & Role ----------------
 async function checkRole(roomId) {
-    const res = await fetch(`http://127.0.0.1:8000/rooms/${roomId}/role`, { credentials: "include" });
+    const res = await fetch(`${API_BASE}/rooms/${roomId}/role`, {
+        credentials: "include"
+    });    
+    console.log(API_BASE)
+
     if (!res.ok) throw "Failed to get role";
     const data = await res.json();
     isAdmin = data.is_admin;
@@ -102,7 +112,11 @@ async function checkRole(roomId) {
 
 async function loadRoom() {
     const roomId = Number(document.getElementById("roomId").value);
-    const res = await fetch(`http://127.0.0.1:8000/rooms/${roomId}`, { credentials: "include" });
+    const res = await fetch(`${API_BASE}/rooms/${roomId}`, {
+        credentials: "include"
+    });
+    console.log(API_BASE)
+
     if (!res.ok) throw "Room not found";
     const room = await res.json();
     document.getElementById("room-title").innerText = room.room_name;
@@ -115,7 +129,13 @@ async function loadRoom() {
 async function connect() {
     await loadRoom();
     const roomId = Number(document.getElementById("roomId").value);
-    socket = new WebSocket(`ws://127.0.0.1:8000/ws/rooms/${roomId}`);
+    const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
+    
+    const ws = new WebSocket(
+     `${wsProtocol}://${location.host}/ws/rooms/${roomId}`
+    );
+    
+    //socket = new WebSocket(`ws://127.0.0.1:8000/ws/rooms/${roomId}`);
 
     socket.onopen = () => {
         document.getElementById("status").innerText = "✅ Connected";
