@@ -3,9 +3,8 @@ from fastapi.responses import HTMLResponse
 from database import create_db
 from websocket.demo import html
 #routers import
-from routers import user_router, ws_router,message_router
+from routers import user_router, ws_router,message_router,room_router
 from auth import  auth_router
-from routers import  room_router
 
 app = FastAPI()
 
@@ -17,8 +16,6 @@ async def root():
 async def startup():
     import models
     return create_db()
-
-
 
 
 #routers

@@ -1,3 +1,4 @@
+from auth import get_current_active_user
 from cloudinary_util import upload_image
 from fastapi import APIRouter, UploadFile,HTTPException,status,Form
 from fastapi.params import Depends
@@ -5,26 +6,33 @@ from sqlalchemy.orm import Session
 from crud.user import get_users,get_user_by_id, delete_user, update_user,create_user
 from database import get_db
 from schemas.user import UserResponse, UserCreate, UserUpdate
+from models.user import  User
 user_router= APIRouter(
     prefix="/users",
     tags=["User"]
 )
 
 @user_router.get("/", response_model=list[UserResponse])
-async def read_all_users(db:Session=Depends(get_db), skip:int=0, limit:int =10):
-    return get_users(db, skip, limit)
+async def read_all_users(db:Session=Depends(get_db), skip:int=0, limit:int =10,current_user:User=Depends(get_current_active_user)):
+    if current_user.is_active:
+        return get_users(db, skip, limit)
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive User can't  Access ")
 
 
 @user_router.get("/{user_id}",response_model=UserResponse)
-async def read_single_user(user_id:int,db:Session=Depends(get_db)):
-    return get_user_by_id(db, user_id)
+async def read_single_user(user_id:int,db:Session=Depends(get_db), current_user:User=Depends(get_current_active_user)):
+    if current_user.id!= user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Cannot Access Others ")
+    if current_user.is_active:
+        return get_user_by_id(db, user_id)
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive User can't  Access ")
 
 
 @user_router.post("/create")
 async def create_new_user(username:str=Form(...), email:str = Form(...), password:str=Form(...), db:Session=Depends(get_db),image:UploadFile|None=None):
     image_url=None
     if image:
-
         try:
             image_url =  await upload_image(image)
         except Exception as e:
@@ -34,14 +42,15 @@ async def create_new_user(username:str=Form(...), email:str = Form(...), passwor
         email=email,
         password=password,
     )
-
     created_user=  create_user(db, data, image_url=image_url)
     if not created_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found")
     return created_user
 
 @user_router.put("/{user_id}",response_model=UserResponse)
-async  def update_existing_user(user_id:int ,username:str=Form(...), email:str = Form(...), password:str=Form(...), image:UploadFile| None=None, db:Session=Depends(get_db)):
+async  def update_existing_user(user_id:int ,username:str=Form(...), email:str = Form(...), password:str=Form(...), image:UploadFile| None=None, db:Session=Depends(get_db),current_user:User=Depends(get_current_active_user)):
+    if user_id!= current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Cannot Update Other's Data")
     if image:
         try:
             image_url = await upload_image(image)
@@ -57,9 +66,10 @@ async  def update_existing_user(user_id:int ,username:str=Form(...), email:str =
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User Not Found")
     return user_update
 
-
 @user_router.delete("/{user_id}",response_model=UserResponse)
-async def delete_existing_user(user_id:int , db:Session=Depends(get_db)):
+async def delete_existing_user(user_id:int , db:Session=Depends(get_db),current_user:User=Depends(get_current_active_user)):
+    if user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Cannot Delete Other's Data")
     user_delete= delete_user(db, user_id)
     if not user_delete:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= "User not Found")

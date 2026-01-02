@@ -19,6 +19,7 @@ def get_room_by_id(db:Session, room_id:int):
     return room
 
 
+
 # {
 #   "room_name": "string",
 #   "host_id": 1,   ->> i will set up from the jwt verification one
@@ -33,16 +34,20 @@ def get_room_by_id(db:Session, room_id:int):
 
 
 
+
 def create_room(db:Session, data:RoomCreate):
     room_data= Room(**data.model_dump())
     db.add(room_data)
     db.commit()
     return room_data
 
-def update_room(db:Session , room_id:int , data:RoomUpdate):
+def update_room(db:Session , room_id:int ,host_id:int,  data:RoomUpdate):
     get_updating_room= db.query(Room).filter(Room.id==room_id).first()
     if not get_updating_room:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No Room Found ")
+    if get_updating_room.host_id != host_id:
+        raise  HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only Host can Updadte a room")
+
     update_data= data.model_dump()
     for key , value in  update_data.items():
         setattr(get_updating_room, key, value)
@@ -52,10 +57,12 @@ def update_room(db:Session , room_id:int , data:RoomUpdate):
     return get_updating_room
 
 
-def delete_room(db:Session, room_id :int ):
-    get_deleting_room= db.query(Room).filter(Room.id==room_id)
+def delete_room(db:Session, room_id :int ,host_id:int):
+    get_deleting_room= db.query(Room).filter(Room.id==room_id).first()
     if not get_deleting_room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Room Found to delete ")
+    if  get_deleting_room.host_id!= host_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Cannot You are not Authroized to delete the room")
     db.delete(get_deleting_room)
     db.commit()
     return get_deleting_room

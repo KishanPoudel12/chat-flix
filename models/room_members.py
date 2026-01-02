@@ -12,12 +12,12 @@ class RoomMember(Base):
     )
 
     room_id: Mapped[int] = mapped_column(
-        ForeignKey("rooms.id"),
+        ForeignKey("rooms.id",ondelete="CASCADE"),
         index=True
     )
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id",ondelete="CASCADE"),
         index=True
     )
 
@@ -53,12 +53,12 @@ class RoomMember(Base):
         back_populates="members"
     )
 
-    # user: Mapped["User"] = relationship(
-    #     "User",
-    #     back_populates="rooms"
-    # )
-
     user: Mapped["User"] = relationship(
         "User",
         back_populates="joined_rooms"
     )
+
+    # user: Mapped["User"] = relationship(
+    #     "User",
+    #     back_populates="joined_rooms",
+    # )

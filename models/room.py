@@ -9,7 +9,7 @@ class Room(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True, nullable=False)
     room_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    host_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+    host_id: Mapped[int] = mapped_column(ForeignKey('users.id',ondelete="CASCADE"), nullable=False)
     room_description: Mapped[str] = mapped_column(String(255), nullable=False)
     video_url: Mapped[str] = mapped_column(Text, nullable=False)
     video_provider: Mapped[str] = mapped_column(String(50), nullable=False, default='youtube')

@@ -3,6 +3,16 @@ from typing import Optional
 from pydantic import  BaseModel
 from datetime import datetime
 
+from models import RoomMember
+
+class RoomMemberResponse(BaseModel):
+    id: int
+    user_id: int
+    joined_at: datetime
+
+    class Config:
+        orm_mode = True
+
 class RoomBase(BaseModel):
     room_name:str
     host_id:int
@@ -30,5 +40,8 @@ class RoomUpdate(BaseModel):
 
 class RoomResponse(RoomBase):
     id:int
+    members:list[RoomMemberResponse]
     pass
+
+
 

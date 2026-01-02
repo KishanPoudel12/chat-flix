@@ -20,6 +20,8 @@ auth_router= APIRouter(
 
 oauth2_scheme= OAuth2PasswordBearer(tokenUrl="/auth/login")
 
+
+
 def get_user(db:Session, user_id:int):
     user= get_user_by_id(db,user_id)
     if not user:

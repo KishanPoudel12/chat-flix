@@ -71,13 +71,17 @@ class User(Base):
     # Relationships
     rooms: Mapped[list["Room"]] = relationship(
         "Room",
+        cascade="all, delete-orphan",
         back_populates="host"
     )
 
     joined_rooms: Mapped[list["RoomMember"]] = relationship("RoomMember", back_populates="user")
 
 
-    messages: Mapped[list["Message"]] = relationship("Message", back_populates="sender")
+    messages: Mapped[list["Message"]] = relationship("Message",
+    cascade="all, delete-orphan",
+    back_populates="sender"
+    )
 
 
 

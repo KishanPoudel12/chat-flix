@@ -13,17 +13,19 @@ in my opinion the message should include
     created_at ,
     updated_at ,
 '''
+
 class Message(Base):
     __tablename__ = "messages"
     id :Mapped[int]= mapped_column(Integer, primary_key=True)
-    sender_id :Mapped[int]= mapped_column(ForeignKey("users.id"))
+    sender_id :Mapped[int]= mapped_column(ForeignKey("users.id",ondelete="SET NULL"))
     sender_username:Mapped[str]=mapped_column(String, nullable=True)
-    room_id:Mapped[int]= mapped_column(ForeignKey("rooms.id"),nullable=True)
+    room_id:Mapped[int|None]= mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"),nullable=True)
     message:Mapped[str]= mapped_column(Text,nullable=True)
     created_at:Mapped[datetime]= mapped_column(DateTime,default=datetime.utcnow)
     updated_at:Mapped[datetime]= mapped_column(DateTime,default=datetime.utcnow, onupdate=datetime.utcnow)
 
     #Relationships
-    room:Mapped[int]= relationship("Room", back_populates="messages")
-    sender:Mapped["User"]=relationship("User", back_populates="messages")
+    room:Mapped["Room"]= relationship("Room", back_populates="messages")
+    sender:Mapped["User"]=relationship("User", back_populates="messages",  passive_deletes=True
+)
 
