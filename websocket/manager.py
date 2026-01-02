@@ -67,6 +67,12 @@ class RoomConnectionManager:
             print(f"[Room Full] Room: {room_id}, Members: {len(self.rooms[room_id])}, Max: {max_members}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Room Full")
 
+        alive = []
+        for u_id, ws in self.rooms[room_id]:
+            if ws.client_state.name == "CONNECTED":
+                alive.append((u_id, ws))
+        self.rooms[room_id] = alive
+
         user_exist = any(u_id == user_id for u_id, _ in self.rooms[room_id])
         if user_exist:
               print(f"[User Already in Room] User: {user_id}, Room: {room_id}")
@@ -94,12 +100,13 @@ class RoomConnectionManager:
             print("---------------in connecte")
             print(state)
             print(f"[User Connected] User: {user_id}, Room: {room_id}, Total Members: {len(self.rooms[room_id])}")
-            try:
-                while True:
-                    await websocket.receive_json()  # keep listening for messages
-            except WebSocketDisconnect:
-                print(f"[Disconnect Detected] User {user_id} left Room {room_id}")
-                self.disconnect(room_id, user_id, db)
+            # try:
+            #     while True:
+            #         await websocket.receive_json()  # keep listening for messages
+            # except WebSocketDisconnect:
+            #     print(f"[Disconnect Detected] User {user_id} left Room {room_id}")
+            #     self.disconnect(room_id, user_id, db)
+
         return True
 
     def disconnect(self, room_id: int, user_id: int, db: Session):

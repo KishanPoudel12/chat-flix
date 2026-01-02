@@ -60,7 +60,7 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
                     room_id=room_id,
                     video_id=data["video_id"],
                     current_time=data["time"],
-                    is_playing=data["is_playing"]
+                    action_str=data["action"]
                 )
             elif data.get("type")=="chat" :
                 await manager.broadcast(room_id=room_id, message={"type":"chat", "message":f"{current_user.username}:{data["message"]}"})
