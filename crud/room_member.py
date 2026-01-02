@@ -66,7 +66,7 @@ def leave_room(db:Session , room_id:int , user_id:int):
         RoomMember.left_at.is_(None)
     ).first()
     if not member:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User Not Found")
+        return None
     member.left_at= datetime.utcnow()
     db.commit()
     db.refresh(member)
