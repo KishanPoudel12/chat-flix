@@ -65,7 +65,6 @@ class RoomConnectionManager:
         except Exception as e:
             print(f"[DB Error] Failed to add user to room: {e} - Continuing with WS connection")
 
-
         #redis  from here :
         state = get_room_state(room_id)
         if state:
