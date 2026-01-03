@@ -33,8 +33,8 @@ async def root():
 @app.on_event("startup")
 async def startup():
     import models
-    return create_db()
-
+    # return create_db()
+    print("The Db Migrations are now handled by albemic itself ")
 
 #routers
 app.include_router(user_router)
