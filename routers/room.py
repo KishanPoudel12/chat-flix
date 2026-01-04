@@ -45,7 +45,7 @@ def get_room_role(room_id:int , current_user:User=Depends(get_user_from_cookie),
 
 
 @room_router.get("/", response_model=List[RoomResponse])
-def read_all_rooms(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),current_user:User=Depends(get_current_active_user)):
+def read_all_rooms(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
     rooms = get_rooms(db, skip=skip, limit=limit)
     return rooms
 
@@ -84,7 +84,7 @@ def create_new_room(
     return room
 
 @room_router.put("/{room_id}", response_model=RoomResponse)
-def update_existing_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db),current_user:User=Depends(get_current_active_user)):
+def update_existing_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User Not Found ")
     updated_room = update_room(db, room_id,current_user.id,  data)
@@ -92,6 +92,6 @@ def update_existing_room(room_id: int, data: RoomUpdate, db: Session = Depends(g
 
 
 @room_router.delete("/{room_id}", response_model=RoomResponse)
-def delete_existing_room(room_id: int, db: Session = Depends(get_db),current_user:User=Depends(get_current_active_user)):
+def delete_existing_room(room_id: int, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
     deleted_room = delete_room(db, room_id, current_user.id)
     return deleted_room
