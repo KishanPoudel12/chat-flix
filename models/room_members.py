@@ -20,6 +20,9 @@ class RoomMember(Base):
         ForeignKey("users.id",ondelete="CASCADE"),
         index=True
     )
+    username:Mapped[str]=mapped_column(
+        String,nullable=True
+    )
 
     role: Mapped[str] = mapped_column(
         String(50),

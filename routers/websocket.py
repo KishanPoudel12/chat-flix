@@ -7,7 +7,7 @@ from crud.room import get_room_by_id
 from database import get_db
 from websocket.manager import RoomConnectionManager
 from auth import  get_current_user
-
+from crud.room_member import  get_users_in_room
 ws_router= APIRouter(
     prefix="/ws",
     tags=["Websocket"]
@@ -39,6 +39,10 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
 
     try :
         await manager.connect(room_id, current_user.id, websocket, room.max_members ,db)
+        if not room.is_live:
+            room.is_live=True
+            db.commit()
+
         for msg in old_messages:
             await websocket.send_json({
                 "type":"chat",
@@ -71,6 +75,10 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
                         "message": f"User {current_user.username} left the room"
                     }
                 )
+                if not get_users_in_room(db,room_id):
+                    room.is_live = False
+                    db.commit()
+
                 await websocket.close(code=1000)
                 break
 
@@ -79,6 +87,9 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
     except WebSocketDisconnect:
         manager.disconnect(room_id, user_id=current_user.id,db=db)
         await manager.broadcast(room_id,message={"type":"system", "message":f"User {current_user.id} Disconnected"} )
+        if not get_users_in_room(db, room_id):
+            room.is_live = False
+            db.commit()
 
 
 

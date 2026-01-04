@@ -8,6 +8,8 @@ from models import RoomMember
 class RoomMemberResponse(BaseModel):
     id: int
     user_id: int
+    role:str
+    username:Optional[str]=None
     joined_at: datetime
 
     model_config = {
@@ -21,6 +23,7 @@ class RoomBase(BaseModel):
     video_provider:Optional[str]=None
     is_live:bool
     is_private:bool
+    current_members:Optional[int]=None
     max_members:int
     scheduled_start:datetime
 
