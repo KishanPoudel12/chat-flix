@@ -1,38 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form,Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from auth import get_current_active_user
 from schemas.room import RoomCreate, RoomUpdate, RoomResponse
 from crud.room import get_rooms, get_room_by_id, create_room, update_room, delete_room
 from database import get_db
 from models import  User
 from datetime import datetime
-from jose import jwt,JWTError
-import os
-from auth   import  require_non_guest_user
+
+from auth   import  require_non_guest_user,get_user_from_cookie
 room_router = APIRouter(
     prefix="/rooms",
     tags=["Rooms"]
 )
-
-def get_user_from_cookie(request:Request,db:Session =Depends(get_db) ):
-    token = request.cookies.get("access_token")
-    if not token :
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Token Found on Users cookie")
-    if token.startswith("Bearer "):
-        token = token[7:]
-    try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
-        user_id= payload.get("user_id")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
-
 
 @room_router.get("/{room_id}/role")
 def get_room_role(room_id:int , current_user:User=Depends(get_user_from_cookie),db:Session=Depends(get_db)):
@@ -41,7 +20,6 @@ def get_room_role(room_id:int , current_user:User=Depends(get_user_from_cookie),
         raise HTTPException(status_code=404, detail="Room not found")
     is_admin= current_user.id==room.host_id
     return {"is_admin": is_admin}
-
 
 
 @room_router.get("/", response_model=List[RoomResponse])
