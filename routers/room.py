@@ -7,14 +7,14 @@ from database import get_db
 from models import  User
 from datetime import datetime
 
-from auth   import  require_non_guest_user,get_user_from_cookie
+from auth   import  require_non_guest_user,get_current_user
 room_router = APIRouter(
     prefix="/rooms",
     tags=["Rooms"]
 )
 
 @room_router.get("/{room_id}/role")
-def get_room_role(room_id:int , current_user:User=Depends(get_user_from_cookie),db:Session=Depends(get_db)):
+def get_room_role(room_id:int , current_user:User=Depends(get_current_user),db:Session=Depends(get_db)):
     room = get_room_by_id(db,room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -23,7 +23,7 @@ def get_room_role(room_id:int , current_user:User=Depends(get_user_from_cookie),
 
 
 @room_router.get("/", response_model=List[RoomResponse])
-def read_all_rooms(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
+def read_all_rooms(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),current_user:User=Depends(get_current_user)):
     rooms = get_rooms(db, skip=skip, limit=limit)
     return rooms
 
@@ -62,14 +62,13 @@ def create_new_room(
     return room
 
 @room_router.put("/{room_id}", response_model=RoomResponse)
-def update_existing_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
+def update_existing_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db),current_user:User=Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User Not Found ")
     updated_room = update_room(db, room_id,current_user.id,  data)
     return updated_room
 
-
 @room_router.delete("/{room_id}", response_model=RoomResponse)
-def delete_existing_room(room_id: int, db: Session = Depends(get_db),current_user:User=Depends(get_user_from_cookie)):
+def delete_existing_room(room_id: int, db: Session = Depends(get_db),current_user:User=Depends(get_current_user)):
     deleted_room = delete_room(db, room_id, current_user.id)
     return deleted_room
