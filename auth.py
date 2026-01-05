@@ -116,7 +116,7 @@ async def login_for_access_token(
       httponly=True,  # prevent JS access for security
       max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) * 60,
       secure=False,  # set True in production with HTTPS
-      samesite="none",
+      samesite="lax",
       path="/"
   )
   return Token(access_token=access_token, token_type="bearer")
