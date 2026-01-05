@@ -14,5 +14,5 @@ def verify_password(password, hashed_password):
 
 
 
-def pagination(query, skip :int=Query(0,ge=0), limit:int=Query(0,ge=1)):
+def pagination(query, skip :int=Query(0,ge=0), limit:int=Query(10,ge=1)):
     return query.offset(skip).limit(limit).all()

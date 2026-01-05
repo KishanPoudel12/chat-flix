@@ -5,7 +5,7 @@ from schemas.room import RoomCreate,RoomUpdate
 from utils import pagination
 
 
-def get_rooms(db:Session, skip:int=0, limit:int=0):
+def get_rooms(db:Session, skip:int=0, limit:int=10):
     query= db.query(Room)
     rooms= pagination(query, skip, limit)
     if not rooms:
