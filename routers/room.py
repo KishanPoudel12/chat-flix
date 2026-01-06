@@ -19,7 +19,7 @@ def get_room_role(room_id:int , current_user:User=Depends(get_current_user),db:S
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     is_admin= current_user.id==room.host_id
-    return {"is_admin": is_admin}
+    return {"is_host": is_admin}
 
 
 @room_router.get("/", response_model=List[RoomResponse])
