@@ -27,6 +27,8 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
     #takign the token out from the cookies
     # token = websocket.cookies.get("access_token")
     token = websocket.query_params.get("token")
+    print("TOken=>",token)
+    print(token)
     print(f"------------{token}-----------")
     if not token :
         await websocket.close(code=1008, reason="No token provided ")
