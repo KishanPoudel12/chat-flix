@@ -22,6 +22,6 @@ class Room(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=datetime.now, onupdate=datetime.now)
 
     # Relationships
-    members: Mapped[list["RoomMember"]] = relationship("RoomMember", back_populates="room")
+    members: Mapped[list["RoomMember"]] = relationship("RoomMember", back_populates="room", cascade="all, delete-orphan", passive_deletes=True)
     host: Mapped["User"] = relationship("User", back_populates="rooms")
     messages:Mapped[list["Message"]] = relationship("Message", back_populates="room")

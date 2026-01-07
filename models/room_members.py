@@ -13,7 +13,7 @@ class RoomMember(Base):
 
     room_id: Mapped[int] = mapped_column(
         ForeignKey("rooms.id",ondelete="CASCADE"),
-        index=True
+        index=True,nullable=False
     )
 
     user_id: Mapped[int] = mapped_column(
