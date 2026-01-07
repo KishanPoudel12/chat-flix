@@ -25,7 +25,8 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The Room is not live")
 
     #takign the token out from the cookies
-    token = websocket.cookies.get("access_token")
+    # token = websocket.cookies.get("access_token")
+    token = websocket.query_params.get("token")
     print(f"------------{token}-----------")
     if not token :
         await websocket.close(code=1008, reason="No token provided ")
