@@ -13,11 +13,11 @@ def get_users_in_room(db:Session, room_id:int):
     return members
 
 def add_user_to_room(db:Session, room_id:int , user_id:int ):
-    members_in_the_given_room= get_users_in_room(db, room_id )
-    for member in members_in_the_given_room:
-        if member.user_id == user_id:
-            return member
+    existing_member = db.query(RoomMember).filter_by(room_id=room_id, user_id=user_id).first()
+    if existing_member:
+        return existing_member
 
+    members_in_the_given_room = get_users_in_room(db, room_id)
     role= "member"
     if members_in_the_given_room:
         if members_in_the_given_room[0].room.host_id == user_id:
