@@ -48,7 +48,7 @@ def update_room(db:Session , room_id:int ,host_id:int,  data:RoomUpdate):
     if get_updating_room.host_id != host_id:
         raise  HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only Host can Updadte a room")
 
-    update_data= data.model_dump()
+    update_data= data.model_dump(exclude_unset=True)
     for key , value in  update_data.items():
         setattr(get_updating_room, key, value)
 

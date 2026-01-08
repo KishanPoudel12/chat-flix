@@ -17,7 +17,7 @@ manager= RoomConnectionManager()
 
 @ws_router.websocket("/rooms/{room_id}")
 async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
-    room= get_room_by_id(db, room_id)
+    room = get_room_by_id(db, room_id)
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unable to find the Room")
 
