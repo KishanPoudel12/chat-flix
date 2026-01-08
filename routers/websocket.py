@@ -21,24 +21,26 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unable to find the Room")
 
-    if not room.is_live :
+    token = websocket.query_params.get("token")
+    print("TOken=>", token)
+    print(token)
+    print(f"------------{token}-----------")
+    if not token:
+        await websocket.close(code=1008, reason="No token provided ")
+        return
+    token = token.replace("Bearer ", "")
+    current_user = await  get_current_user(token, db)
+    if not current_user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The User is Inactive")
+
+
+    if not room.is_live and room.host_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The Room is not live")
 
     #takign the token out from the cookies
     # token = websocket.cookies.get("access_token")
-    token = websocket.query_params.get("token")
-    print("TOken=>",token)
-    print(token)
-    print(f"------------{token}-----------")
-    if not token :
-        await websocket.close(code=1008, reason="No token provided ")
-        return
-    token = token.replace("Bearer ", "")
-    current_user =await  get_current_user(token, db)
-    if not current_user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The User is Inactive")
 
-    old_messages= get_messages(db, room_id,skip=0, limit=50)
+    # old_messages= get_messages(db, room_id,skip=0, limit=50)
 
     try :
         await manager.connect(room_id, current_user.id, websocket, room.max_members ,db)
@@ -46,11 +48,11 @@ async def join(room_id:int , websocket:WebSocket, db:Session=Depends(get_db)):
             room.is_live=True
             db.commit()
 
-        for msg in old_messages:
-            await websocket.send_json({
-                "type":"chat",
-                "message":f"User {msg.sender_username} : {msg.message}"
-            })
+        # for msg in old_messages:
+        #     await websocket.send_json({
+        #         "type":"chat",
+        #         "message":f"User {msg.sender_username} : {msg.message}"
+        #     })
 
         broadcast_message = {"type":"system","message":f"User {current_user.username} Joined the Room"}
         await manager.broadcast(room_id,broadcast_message)

@@ -102,7 +102,10 @@ async def create_new_user(response:Response,username:str=Form(...), email:str = 
         secure=False,  # set True in production with HTTPS
         samesite="lax"
     )
-    return created_user
+    return {
+        "access_token":access_token,
+        "user":created_user
+    }
 
 @user_router.put("/{user_id}",response_model=UserResponse)
 async  def update_existing_user(user_id:int ,username:str=Form(...), email:str = Form(...), password:str=Form(...), image:UploadFile| None=None, db:Session=Depends(get_db),current_user:User=Depends(get_current_active_user)):
