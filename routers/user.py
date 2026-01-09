@@ -51,7 +51,7 @@ async def create_guest_user(db:Session=Depends(get_db)):
     if not created_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="User Creation Unsuccessfull")
     access_token = guest_access_token(
-        data={"sub": str(created_user.id), "is_guest": True}
+        data={"user_id": str(created_user.id), "is_guest": True}
     )
 
 
