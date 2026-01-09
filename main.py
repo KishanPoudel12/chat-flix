@@ -17,6 +17,7 @@ origins = [
     "https://chat-flix-d92mas0cu-kishanpoudel563-8257s-projects.vercel.app",
     "https://chat-flix-gamma.vercel.app",
     "https://chat-flix-zeta.vercel.app",
+    "https://chatflix-sigma.vercel.app",
 ]
 
 app.add_middleware(
