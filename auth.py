@@ -110,15 +110,6 @@ async def login_for_access_token(
         data={"user_id":user.id},
         expire_delta=access_token_expires)
 
-  response.set_cookie(
-      key="access_token",  # cookie name
-      value=access_token,  # value with Bearer prefix
-      httponly=True,  # prevent JS access for security
-      max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) * 60,
-      secure=False,  # set True in production with HTTPS
-      samesite="lax",
-      path="/"
-  )
   return Token(access_token=access_token, token_type="bearer")
 
 @auth_router.get("/me",response_model=UserResponse)

@@ -14,6 +14,7 @@ origins = [
     "http://localhost:3000",  # frontend URL
     "http://127.0.0.1:5173",  # frontend dev server
     "https://chat-flix-kishan.onrender.com",  # your hosted frontend
+    "https://chat-flix-d92mas0cu-kishanpoudel563-8257s-projects.vercel.app",
 ]
 
 app.add_middleware(
