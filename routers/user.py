@@ -34,7 +34,7 @@ async def read_single_user(user_id:int,db:Session=Depends(get_db), current_user:
 
 #for guest ko lagi
 @user_router.post("/guest")
-async def create_guest_user(response:Response,db:Session=Depends(get_db)):
+async def create_guest_user(db:Session=Depends(get_db)):
     import uuid
     image_url = "_guest_"
     guest_email = f"guest_{uuid.uuid4().hex}@example.com"
@@ -53,14 +53,7 @@ async def create_guest_user(response:Response,db:Session=Depends(get_db)):
     access_token = guest_access_token(
         data={"sub": str(created_user.id), "is_guest": True}
     )
-    response.set_cookie(
-        key="access_token",  # cookie name
-        value=f"Bearer {access_token}",  # value with Bearer prefix
-        httponly=True,  # prevent JS access for security
-        max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) * 60,
-        secure=False,  # set True in production with HTTPS
-        samesite="lax"
-    )
+
 
     return {
     "user": created_user,
@@ -94,14 +87,7 @@ async def create_new_user(response:Response,username:str=Form(...), email:str = 
     access_token = create_access_token(
         data={"user_id": created_user.id},
         expire_delta=access_token_expires)
-    response.set_cookie(
-        key="access_token",  # cookie name
-        value=f"Bearer {access_token}",  # value with Bearer prefix
-        httponly=True,  # prevent JS access for security
-        max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) * 60,
-        secure=False,  # set True in production with HTTPS
-        samesite="lax"
-    )
+
     return {
         "access_token":access_token,
         "user":created_user
